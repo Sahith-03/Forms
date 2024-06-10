@@ -18,13 +18,10 @@ model form_schema{
   field_name String
   field_type String 
   options Json 
-  FormData  form_data[]
 }
 
 model form_data{
   id Int @id @default(autoincrement())
-  formSchema  form_schema @relation(fields: [formSchemaId], references: [id])
-  formSchemaId Int
   responses Json
 }
 

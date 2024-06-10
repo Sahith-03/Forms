@@ -12,7 +12,7 @@
 
     responses.set(data.data)
 
-    console.log(responses)
+    // console.log(data.data)
 
     // async function fetchResponses() {
     //     const res = await fetch('http://localhost:3000/api/form-data',{
@@ -44,11 +44,11 @@
 <div class="flex justify-center mt-6 gap-5 my-auto">
 {#each $responses as response}
     <div class="border border-black rounded-md p-2 m-2 h-max">
-        {#each Object.keys(response) as key}
+        {#each Object.entries(response["responses"]) as [key, value]}
         {#if key !== 'id'}
             <div class="flex">
-                <div class="font-bold mr-1">{key}: </div>
-                <div>{response[key]}</div>
+            <div class="font-bold mr-1">{key}: </div>
+            <div>{value}</div>
             </div>
         {/if}
         {/each}

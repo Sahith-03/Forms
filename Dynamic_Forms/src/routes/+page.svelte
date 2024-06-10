@@ -1,5 +1,5 @@
 <script lang="ts">
-    // import { onMount } from 'svelte';
+    import { onMount } from 'svelte';
     import type { Schema, Field } from '../lib/types';
     import '../app.css';
     import { enhance } from '$app/forms';
@@ -19,7 +19,7 @@
 
     async function handleSubmit(event: Event) {
         event.preventDefault();
-        console.log('Form data submitted:', formData);
+        
 
         const res = await fetch('http://localhost:3000/api/form-data', {
             method: 'POST',
@@ -30,6 +30,7 @@
         });
         const data = await res.json();
         if (res.ok) {
+            console.log('Form data submitted:', formData);
             alert('Response saved successfully');
         } else {
             alert(`Failed to save: ${data.message}`);
@@ -37,8 +38,10 @@
     }
 
 
-
-    initializeFormData();
+    onMount(() => {
+        initializeFormData();
+    });
+    
 </script>
 
 <style>

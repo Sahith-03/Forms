@@ -22,11 +22,13 @@ import express, { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import bodyParser from 'body-parser';
 
+const cors = require('cors');
 // Initialize Prisma Client
 const prisma = new PrismaClient();
 
 // Initialize Express App
 const app = express();
+app.use(cors());
 app.use(bodyParser.json());
 
 // Endpoint to get form schema
@@ -44,9 +46,10 @@ app.get('/api/form-schema', async (req: Request, res: Response) => {
 app.post('/api/form-schema', async (req: Request, res: Response) => {
   const { schema } = req.body;
   try {
+    console.log('Schema:', schema);
     const result = await prisma.form_schema.createMany({
-      data: schema,
-      skipDuplicates: true, // Skip duplicate entries
+      data: schema
+      // skipDuplicates: true, // Skip duplicate entries
     });
     console.log('Schema updated successfully:', result);
     res.json({ message: 'Schema updated successfully' });
@@ -69,10 +72,14 @@ app.get('/api/form-data', async (req: Request, res: Response) => {
 
 // Endpoint to update response
 app.post('/api/form-data', async (req: Request, res: Response) => {
-  const data = req.body;
+  const formdata = req.body;
+
   try {
+    const schema = await prisma.form_schema.findMany();
     const response = await prisma.form_data.create({
-      data,
+      data: {
+        responses: formdata,
+      },
     });
     console.log('Response inserted successfully:', response);
     res.status(200).json({ message: 'Response inserted successfully' });
