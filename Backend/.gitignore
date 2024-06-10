@@ -1,4 +1,2 @@
 node_modules
-Backend/server.ts
-Backend/prisma_handler.ts
 .env
