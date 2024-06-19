@@ -1,9 +1,9 @@
-import {getFormSchema, updateFormSchema,updateResponse,getResponse,deleteResponse} from './handler';
+// import {getFormSchema, updateFormSchema,updateResponse,getResponse,deleteResponse} from './handler';
 
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-// const { getFormSchema, updateFormSchema,updateResponse,getResponse,deleteResponse } = require('./handler');
+const { getFormSchema, updateFormSchema,updateResponse,getResponse,deleteResponse } = require('./handler');
 
 const app = express();
 const PORT = 3000;

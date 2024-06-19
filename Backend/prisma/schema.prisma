@@ -13,15 +13,35 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model form_schema{
+model form{
   id Int @id @default(autoincrement())
-  field_name String
-  field_type String 
-  options Json 
+  formName String
+  formSchema Json
+  userId Int 
+  user user @relation(fields: [userId], references: [id])
+  data formData[]
 }
 
-model form_data{
+// model field{
+//   field_name String
+//   field_type String 
+//   options Json
+//   formId Int
+//   form form @relation(fields: [formId], references: [id])
+// }
+
+model formData{
   id Int @id @default(autoincrement())
   responses Json
+  form form @relation(fields: [formId], references: [id])
+  formId Int
 }
 
+model user{
+  id        Int      @id @default(autoincrement())
+  email    String   @unique
+  username  String
+  password  String
+  role      String
+  forms form[]
+}

@@ -1,11 +1,22 @@
 import type { Schema, Field } from '../../lib/types';
 import type { PageServerLoad,Actions } from './$types';
-import { json } from '@sveltejs/kit';
+import { json, redirect } from '@sveltejs/kit';
 
-export const load: PageServerLoad = async ({ fetch }) => {
-    const res = await fetch('http://localhost:3000/api/form-schema');
-    const schema = await res.json();
-    return { schema };
+export const load: PageServerLoad = async ({ fetch,locals }) => {
+  const user = locals.user;
+  // console.log('User:', user);
+  if(!user || user.role !== 'admin'){
+    console.log('User not logged in');
+    throw redirect(302,'/login')
+  }
+  const userId = user.userId;
+  const res = await fetch(`http://localhost:3000/api/form-schema/${userId}`);
+  const response = await res.json();
+  console.log(response);
+  // const schema = response[0].formSchema;
+  // console.log('Response:', response[0].formSchema);
+  // console.log('Schema:', schema[0].formSchema);
+  return { user ,response };
 };
 
 function emptyField(field: Field): boolean {
@@ -16,31 +27,38 @@ function emptyField(field: Field): boolean {
     return true;
 }
 
-
 export const actions: Actions = {
-    default: async ({ request }) => {
+    default: async ({ request, locals }) => {
       console.log('Saving Schema');
       const data = await request.formData();
+      const formName = data.get('formName');
       const schemaString = data.get('schema');
+
+      console.log('Form Name:', formName);
+
+      if(!locals.user){
+        return { message: 'Unauthorized' , status: 401 };
+      }
+      const userId = locals.user.userId;
   
       if (typeof schemaString !== 'string') {
-        return json({ message: 'Invalid schema data' }, { status: 400 });
+        return { message: 'Invalid schema data' , status: 400 };
       }
   
-      let schema: Schema = [];
+      let schema: Schema;
   
       try {
         schema = JSON.parse(schemaString);
       } catch (error) {
         console.error('Error parsing schema JSON:', error);
-        return json({ message: 'Invalid JSON format' }, { status: 400 });
+        return { message: 'Invalid JSON format' , status: 400 };
       }
   
-      console.log(schema);
+      // console.log(schema);
   
       if (schema.some(field => !emptyField(field))) {
         console.error('Please fill all the fields!!');
-        return json({ message: 'Please fill all the fields' }, { status: 400 });
+        return { "message": 'Please fill all the fields', "status": 400 };
       }
   
       const optionFieldTypes = ['select', 'radio', 'checkbox'];
@@ -50,84 +68,28 @@ export const actions: Actions = {
         field.options.some(option => option.trim() === '')
       )) {
         console.error('Please check all the options are filled!!');
-        return json({ message: 'Please check all the options are filled!!' }, { status: 400 });
+        return { message: 'Please check all the options are filled!!' , status: 400 };
       }
-  
+
       try {
         const res = await fetch('http://localhost:3000/api/form-schema', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ schema })
+          body: JSON.stringify({formName,schema,userId})
         });
   
         if (!res.ok) {
           const errorData = await res.json();
           console.error('Failed to save schema:', errorData.message);
-          return json({ message: `Failed to save schema: ${errorData.message}` }, { status: 500 });
+          return { message: `Failed to save schema: ${errorData.message}` , status: 500 };
         }
   
-        return json({ message: 'Schema saved successfully' });
+        return { message: 'Schema saved successfully' };
       } catch (error) {
         console.error('Error saving schema:', error);
-        return json({ message: 'Error saving schema' }, { status: 500 });
+        return { message: 'Error saving schema' , status: 500 };
       }
     }
-  };
-
-
-// export const actions: Actions = {
-//     default: async ({ request }) => {
-//         console.log('Saving Schema')
-//         const data = await request.formData();
-//         const schemaString = data.get('schema');
-
-//         if (typeof schemaString !== 'string') {
-//             return json({ message: 'Invalid schema data' }, { status: 400 });
-//         }
-
-//         let schema: Schema = [];
-
-//         schema = JSON.parse(schemaString);
-
-//         console.log(schema)
-
-//         if (schema.some(field => !emptyField(field))) {
-//             console.error('Please fill all the fields!!');
-//             return;
-//         }
-
-//         const optionFieldTypes = ['select', 'radio', 'checkbox'];
-        
-//         if(schema.some(field => optionFieldTypes.includes(field.field_type) && 
-//             (field.options.some(option => option.trim() === ''))
-//         )){
-//             console.error('Please check all the options are filled!!');
-//             return json({ message: 'Please check all the options are filled!!' }, { status: 400 });
-//         }
-
-//         try {
-//             const res = await fetch('http://localhost:3000/api/form-schema', {
-//               method: 'POST',
-//               headers: {
-//                 'Content-Type': 'application/json'
-//               },
-//               body: JSON.stringify({ schema })
-//             });
-      
-//             if (!res.ok) {
-//               const errorData = await res.json();
-//               console.error('Failed to save schema:', errorData.message);
-//               return json({ message: `Failed to save schema: ${errorData.message}` }, { status: 500 });
-//             }
-      
-//             return json({ message: 'Schema saved successfully' });
-//           } catch (error) {
-//             console.error('Error saving schema:', error);
-//             return json({ message: 'Error saving schema' }, { status: 500 });
-//           }
-//     }
-// };
-
-
+};
